@@ -40,7 +40,7 @@ $('#startButton').click(function () {
 
 // Nhận trạng thái cập nhật
 ipcRenderer.on('update-status', (event, data) => {
-    if (data.status !== '') {
+    if (data.status == '') {
         $('#status').append(`<p class="mt-1 mb-1">${data.link}</p>`);
 
     } else {
@@ -64,9 +64,10 @@ $('#confirmAddLinks').click(function () {
     const newLinks = $('#newLinksInput').val().split('\n').filter(link => link.trim() !== '');
     if (newLinks.length > 0) {
         const currentLinks = $('#linksList').val().split('\n').filter(link => link.trim() !== '');
-        const updatedLinks = [...currentLinks, ...newLinks];
+        const updatedLinks = [...newLinks];
+        const mergeLinks = [...currentLinks, ...newLinks];
         $('#linksList').val([...currentLinks, ...newLinks].join('\n')); // Append vào textarea cũ
-        ipcRenderer.send('update-links', updatedLinks, delay);
+        ipcRenderer.send('update-links', newLinks, delay);
     }
     addLinksModalElement.hide()
 });
@@ -84,6 +85,7 @@ ipcRenderer.on('process-completed', () => {
 
 
 $('#pauseButton').click(function () {
+    $("#newLinksInput").val('')
     ipcRenderer.send('pause');
 });
 

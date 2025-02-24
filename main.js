@@ -73,7 +73,7 @@ const runTask = async (link, delay) => {
 app.whenReady().then(() => {
     mainWindow = new BrowserWindow({
         width: 1280,
-        height: 720,
+        height: 800,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
@@ -103,6 +103,7 @@ ipcMain.on('start-view', async (event, data) => {
 
     if (validProxies.length === 0) {
         event.reply('update-status', { link: 'Không có proxy hợp lệ!', status: '' });
+        event.reply('process-completed');
         return;
     }
 
