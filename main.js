@@ -4,6 +4,7 @@ const puppeteer = require('puppeteer');
 const pLimit = require('p-limit');
 const path = require('path');
 const os = require('os');
+const ProxyChain = require("proxy-chain");
 
 
 let mainWindow;
@@ -23,14 +24,24 @@ const saveProxies = (proxies) => {
 // 📌 Hàm kiểm tra proxy có hoạt động không
 const checkProxy = async (proxy) => {
     try {
+
+        let newProxyUrl = proxy
+
+        if (proxy.includes("@")) {
+            newProxyUrl = await ProxyChain.anonymizeProxy("http://"+proxy);
+        }
+
+
         const browser = await puppeteer.launch({
-            args: [`--proxy-server=${proxy}`]
+            args: [`--proxy-server=${newProxyUrl}`]
         });
+        
         const page = await browser.newPage();
         await page.goto('https://www.google.com', { waitUntil: 'domcontentloaded', timeout: 5000 });
         await browser.close();
         return true;
     } catch (error) {
+        console.log(error)
         return false;
     }
 };
@@ -51,8 +62,17 @@ const runTask = async (link, delay) => {
     proxyIndex++;
 
     try {
+
+        let newProxyUrl = proxy;
+        if (proxy.includes("@")) {
+            newProxyUrl = await ProxyChain.anonymizeProxy("http://"+proxy);
+        }
+    
+    
+        
+
         let browserOptions = {
-            args: [`--proxy-server=${proxy}`],
+            args: [`--proxy-server=${newProxyUrl}`],
             headless: false
         };
         if (os.platform() === 'win32') {
@@ -62,10 +82,13 @@ const runTask = async (link, delay) => {
 
 
 
+
+
         const browser = await puppeteer.launch({
-            args: [`--proxy-server=${proxy}`],
+            args: [`--proxy-server=${newProxyUrl}`],
             headless: false
         });
+        
         const page = await browser.newPage();
         
         mainWindow.webContents.send('update-status', { link, status: 'Mở web - dùng proxy ' + proxy });
@@ -76,6 +99,9 @@ const runTask = async (link, delay) => {
 
         await browser.close();
         mainWindow.webContents.send('update-status', { link, status: 'Hoàn thành' });
+        if (proxy.includes("@")) {
+            await ProxyChain.closeAnonymizedProxy(newProxyUrl, true);
+        }
 
     } catch (error) {
         console.log(`Lỗi proxy: ${proxy} - ${error.message}`);
