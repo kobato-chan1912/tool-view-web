@@ -3,6 +3,8 @@ const fs = require('fs');
 const puppeteer = require('puppeteer');
 const pLimit = require('p-limit');
 const path = require('path');
+const os = require('os');
+
 
 let mainWindow;
 let isPaused = false;
@@ -49,6 +51,17 @@ const runTask = async (link, delay) => {
     proxyIndex++;
 
     try {
+        let browserOptions = {
+            args: [`--proxy-server=${proxy}`],
+            headless: false
+        };
+        if (os.platform() === 'win32') {
+            browserOptions.executablePath = path.join(__dirname, 'chrome', 'chrome.exe');
+        }
+
+
+
+
         const browser = await puppeteer.launch({
             args: [`--proxy-server=${proxy}`],
             headless: false
